@@ -1,0 +1,5 @@
+Parameters:
+  Service:
+    Default: default
+    Description: The service that uses the DB
+    Type: String

@@ -1,0 +1,4 @@
+Parameters:
+  VpcId:
+    Description: VPC Id the column
+    Type: AWS::EC2::VPC::Id

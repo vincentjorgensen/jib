@@ -1,0 +1,6 @@
+Outputs:
+  RecordSetCanonicalRecord:
+    Value:
+      Fn::GetAtt:
+        - LoadBalancer
+        - DNSName

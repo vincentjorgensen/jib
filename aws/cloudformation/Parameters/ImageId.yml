@@ -1,0 +1,4 @@
+Parameters:
+  ImageId:
+    Description: EC2 Image Id
+    Type: AWS::EC2::Image::Id

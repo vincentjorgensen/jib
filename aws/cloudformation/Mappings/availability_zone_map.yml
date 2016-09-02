@@ -1,0 +1,42 @@
+Mappings:
+  AvailabilityZoneMap:
+    us-east-1:
+      FirstAvailabilityZone: us-east-1c
+      SecondAvailabilityZone: us-east-1d
+      ThirdAvailabilityZone: us-east-1e
+    us-west-1:
+      FirstAvailabilityZone: us-west-1a
+      SecondAvailabilityZone: us-west-1b
+      ThirdAvailabilityZone: us-west-1c
+    us-west-2:
+      FirstAvailabilityZone: us-west-2a
+      SecondAvailabilityZone: us-west-2b
+      ThirdAvailabilityZone: us-west-2c
+    eu-west-1:
+      FirstAvailabilityZone: eu-west-1a
+      SecondAvailabilityZone: eu-west-1b
+      ThirdAvailabilityZone: eu-west-1c
+    eu-central-1:
+      FirstAvailabilityZone: eu-central-1a
+      SecondAvailabilityZone: eu-central-1b
+    ap-northeast-1:
+      FirstAvailabilityZone: ap-northeast-1a
+      SecondAvailabilityZone: ap-northeast-1b
+      ThirdAvailabilityZone: ap-northeast-1c
+    ap-northeast-2:
+      FirstAvailabilityZone: ap-northeast-2a
+      SecondAvailabilityZone: ap-northeast-2c
+    ap-southeast-1:
+      FirstAvailabilityZone: ap-southeast-1a
+      SecondAvailabilityZone: ap-southeast-1b
+    ap-southeast-2:
+      FirstAvailabilityZone: ap-southeast-2a
+      SecondAvailabilityZone: ap-southeast-2b
+      ThirdAvailabilityZone: ap-southeast-2c
+    ap-south-1:
+      FirstAvailabilityZone: ap-south-1a
+      SecondAvailabilityZone: ap-south-2b
+    sa-east-1:
+      FirstAvailabilityZone: sa-east-1a
+      SecondAvailabilityZone: sa-east-1b
+      ThirdAvailabilityZone: sa-east-1c

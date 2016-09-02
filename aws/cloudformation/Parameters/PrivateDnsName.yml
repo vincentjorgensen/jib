@@ -1,0 +1,5 @@
+Parameters:
+  PrivateDnsName:
+    AllowedPattern: '[\w.]+'
+    Description: Private-facing DNS Zone
+    Type: String

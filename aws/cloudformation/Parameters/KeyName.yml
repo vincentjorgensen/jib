@@ -1,0 +1,4 @@
+Parameters:
+  KeyName:
+    Description: Existing EC2 KeyPair for SSH
+    Type: AWS::EC2::KeyPair::KeyName

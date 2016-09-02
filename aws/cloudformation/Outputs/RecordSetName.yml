@@ -1,0 +1,16 @@
+Outputs:
+  RecordSetName:
+    Value:
+      Fn::Join:
+        - ''
+        - - Ref: Region
+          - '-'
+          - Ref: Environs
+          - '-'
+          - Ref: Spoke
+          - '-'
+          - Ref: AppName
+          - '-'
+          - Ref: Service
+          - "."
+          - Ref: PrivateDnsName
