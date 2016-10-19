@@ -1,0 +1,214 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Consul Server
+Parameters:
+  AppName:
+    AllowedPattern: '\w+'
+    Description: Cohors application name
+    Type: String
+  PrivateDnsName:
+    AllowedPattern: '[\w.]+'
+    Default: example.net
+    Description: Private-facing DNS Zone
+    Type: String
+  PrivateDnsZoneId:
+    AllowedPattern: '^Z\w+'
+    Default: Z3USDJ5Q51ZUIU
+    Description: Private-facing DNS Zone
+    Type: String
+  CohorsSecurityGroup:
+    Description: VPC security group
+    Type: AWS::EC2::SecurityGroup::Id
+  Environs:
+    Default: dev
+    Description: Prod or Dev (non-production)
+    Type: String
+    AllowedValues:
+    - prod
+    - dev
+    - galaxystg
+    - galaxydev
+    - galaxyprd
+  ImageId:
+    Description: EC2 image id
+    Type: AWS::EC2::Image::Id
+  InstanceType:
+    Default: t2.small
+    Description: EC2 instance type
+    Type: String
+    AllowedValues:
+    - t2.nano
+    - t2.micro
+    - t2.small
+    - t2.medium
+    - t2.large
+  KeyName:
+    Description: Existing EC2 KeyPair for SSH
+    Type: AWS::EC2::KeyPair::KeyName
+  Region:
+    Default: us-west-2
+    Description: AWS EC2 Region
+    Type: String
+    AllowedValues:
+    - us-west-1
+    - us-west-2
+    - us-east-1
+    - eu-west-1
+    - eu-central-1
+    - ap-southeast-1
+    - ap-southeast-2
+    - ap-northeast-1
+    - ap-northeast-2
+    - sa-east-1
+  Spoke:
+    Default: core
+    Description: Core or Edge
+    Type: String
+    AllowedValues:
+    - core
+    - edge
+  SubnetId:
+    Description: EC2 subnet id
+    Type: AWS::EC2::Subnet::Id
+  VpcId:
+    Description: VPC Id for Cohors column
+    Type: AWS::EC2::VPC::Id
+Resources:
+  ConsulSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access VPC from entire subnet
+      SecurityGroupIngress:
+      - CidrIp: 192.168.0.0/16
+        FromPort: 80
+        IpProtocol: TCP
+        ToPort: 80
+      VpcId:
+        Ref: VpcId
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join:
+          - ''
+          - - Ref: Region
+            - '-'
+            - Ref: Environs
+            - '-'
+            - Ref: Spoke
+            - '-'
+            - Ref: AppName
+            - '-'
+            - Ref: AppName
+  ConsulSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: '0'
+      GroupId:
+        Ref: ConsulSecurityGroup
+      IpProtocol: "-1"
+      SourceSecurityGroupId:
+        Ref: ConsulSecurityGroup
+      ToPort: '65535'
+  ConsulInstance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          commands:
+            install_python:
+              command: apt-get update
+              command: apt-get install -y python
+    Properties:
+      ImageId:
+        Ref: ImageId
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroupIds:
+      - Ref: CohorsSecurityGroup
+      - Ref: ConsulSecurityGroup
+      SourceDestCheck: 'False'
+      SubnetId:
+        Ref: SubnetId
+      Tags:
+      - Key: Name
+        Value:
+          Ref: AWS::StackName
+      - Key: linux
+        Value: ubuntu
+      - Key: role
+        Value: consul
+      - Key: environs
+        Value:
+          Ref: Environs
+      - Key: region
+        Value:
+          Ref: Region
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - |
+              #!/bin/bash -ex
+            - |
+              # Process CloudFormation init definitions
+            - |
+              apt-get update
+            - |
+              apt-get -y install python-setuptools
+            - |
+              mkdir aws-cfn-bootstrap-latest 
+            - |
+              curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1
+            - |
+              easy_install aws-cfn-bootstrap-latest
+            - 'cfn-init -s '
+            - Ref: AWS::StackName
+            - ' -v '
+            - " -r ConsulInstance "
+            - "    --region "
+            - Ref: AWS::Region
+            - |
+
+              # End
+#  ConsulServerR53:
+#    Type: AWS::Route53::RecordSet
+#    Properties:
+#      HostedZoneId:
+#        Ref: PrivateDnsZoneId
+#      Name:
+#        Fn::Join:
+#        - ''
+#        - - Ref: Region
+#          - '-'
+#          - Ref: Environs
+#          - '-'
+#          - Ref: Spoke
+#          - -consul
+#          - "."
+#          - Ref: PrivateDnsName
+#      ResourceRecords:
+#        - Fn::GetAtt:
+#          - ConsulInstance
+#          - PrivateIp
+#      TTL: 300
+#      Type: A
+Outputs:
+  RecordSetName:
+    Value:
+      Fn::Join:
+        - ''
+        - - Ref: Region
+          - '-'
+          - Ref: Environs
+          - '-'
+          - Ref: Spoke
+          - -consul
+          - "."
+          - Ref: PrivateDnsName
+  RecordSetAddressRecord:
+    Value:
+      Fn::GetAtt:
+        - ConsulInstance
+        - PrivateIp

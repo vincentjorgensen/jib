@@ -1,0 +1,52 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cohors DNS
+Parameters:
+  Organization:
+    Type: String
+  PublicDnsName:
+    Type: String
+  PrivateDnsName:
+    Type: String
+Resources:
+  PublicHostedDns:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment:
+          Fn::Join:
+          - ''
+          - - Public External Domain for
+            - ' '
+            - Ref: Organization
+      Name:
+        Ref: PublicDnsName
+  PrivateHostedDns:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment:
+          Fn::Join:
+          - ''
+          - - Private External Domain for
+            - ' '
+            - Ref: Organization
+      Name:
+        Ref: PrivateDnsName
+Outputs:
+  PublicExternalDnsZone:
+    Description: Public DNS Zone
+    Value:
+      Ref: PublicHostedDns
+  PrivateExternalDnsZone:
+    Description: Private DNS Zone
+    Value:
+      Ref: PrivateHostedDns
+  PublicExternalDnsName:
+    Description: Public DNS Zone
+    Value:
+      Ref: PublicDnsName
+  PrivateExternalDnsName:
+    Description: Private DNS Zone
+    Value:
+      Ref: PrivateDnsName

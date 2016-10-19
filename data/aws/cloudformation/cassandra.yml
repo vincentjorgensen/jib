@@ -1,0 +1,438 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cassandra
+Parameters:
+  AppName:
+    AllowedPattern: '\w+'
+    Description: Cohors application name
+    Type: String
+  AvailabilityZones:
+    Description: Availability Zones for VPC
+    Type: CommaDelimitedList
+  ClusterSize:
+    Description: How many nodes in the cluster
+    Type: Number
+  Environs:
+    Default: dev
+    Description: Prod or Dev (non-production)
+    Type: String
+    AllowedValues:
+    - prod
+    - dev
+  ImageId:
+    Description: EC2 image id
+    Type: AWS::EC2::Image::Id
+  InstanceType:
+    Default: m4.large
+    Description: EC2 instance type
+    Type: String
+    AllowedValues:
+    - m4.large
+    - m4.xlarge
+    - r4.large
+    - r4.xlarge
+  KeyName:
+    Description: Existing EC2 KeyPair for SSH
+    Type: AWS::EC2::KeyPair::KeyName
+  PrivateDnsName:
+    AllowedPattern: '[\w.]+'
+    Description: Private-facing DNS Zone
+    Type: String
+  PrivateDnsZoneId:
+    AllowedPattern: '^[Zz][A-Z0-9]+'
+    Description: Private-facing DNS Zone
+    Type: String
+  Region:
+    Default: us-west-2
+    Description: AWS EC2 Region
+    Type: String
+    AllowedValues:
+    - us-west-1
+    - us-west-2
+    - us-east-1
+    - eu-west-1
+    - eu-central-1
+    - ap-southeast-1
+    - ap-southeast-2
+    - ap-northeast-1
+    - ap-northeast-2
+    - sa-east-1
+  SecurityGroup:
+    Description: VPC security group
+    Type: AWS::EC2::SecurityGroup::Id
+  Service:
+    Description: The service that uses the DB
+    Type: String
+  Spoke:
+    Default: core
+    Description: Core or Edge
+    Type: String
+    AllowedValues:
+    - core
+    - edge
+  SubnetIds:
+    Description: EC2 subnet ids
+    Type: List<AWS::EC2::Subnet::Id>
+  VolumeSize:
+    Description: Volume size for each instance
+    Type: Number
+  VpcId:
+    Description: VPC Id for Cohors column
+    Type: AWS::EC2::VPC::Id
+Resources:
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: false
+      BlockDeviceMappings:
+      - DeviceName: /dev/sda1 # /dev/xvda1
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize:
+            Ref: VolumeSize
+          VolumeType: gp2 # General Purpose (SSD)
+      - DeviceName: /dev/sdb # /dev/xvdb
+        VirtualName: ephemeral0
+      - DeviceName: /dev/sdc
+        VirtualName: ephemeral1
+      - DeviceName: /dev/sdd
+        VirtualName: ephemeral2
+      - DeviceName: /dev/sde
+        VirtualName: ephemeral3
+      EbsOptimized:
+        Fn::FindInMap:
+          - EbsOptimizedMap
+          - Ref: InstanceType
+          - Optimized
+      ImageId:
+        Ref: ImageId
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroups:
+      - Ref: SecurityGroup
+      - Ref: CassandraSecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - |
+              #!/bin/bash -ex
+            - |
+              # Process CloudFormation init definitions
+            - |
+              apt-get update
+            - |
+              apt-get -y install python-setuptools python-pip python
+            - |
+              mkdir aws-cfn-bootstrap-latest 
+            - |
+              curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1
+            - |
+              easy_install aws-cfn-bootstrap-latest
+            - 'cfn-init -s '
+            - Ref: AWS::StackName
+            - ' -v '
+            - " -r LaunchConfig "
+            - "    --region "
+            - Ref: AWS::Region
+            - |
+
+              # End
+  ServerGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones:
+        Ref: AvailabilityZones
+      DesiredCapacity:
+        Ref: ClusterSize
+      LaunchConfigurationName:
+        Ref: LaunchConfig
+      LoadBalancerNames:
+        - Ref: LoadBalancer
+        - Ref: LoadBalancerExternal
+      MaxSize:
+        Ref: ClusterSize
+      MinSize:
+        Ref: ClusterSize
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: AWS::StackName
+      - Key: linux
+        PropagateAtLaunch: 'true'
+        Value: ubuntu
+      - Key: role
+        PropagateAtLaunch: 'true'
+        Value: cassandra
+      - Key: environs
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Environs
+      - Key: region
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Region
+      - Key: spoke
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Spoke
+      - Key: service
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Service
+      VPCZoneIdentifier:
+        Ref: SubnetIds
+  CassandraSecurityGroupExternal:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: External Cassandra Security Group
+      SecurityGroupEgress: []
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        IpProtocol: tcp
+        FromPort: 9160
+        ToPort: 9160
+      # Vincent's WFH IP Address
+#      - CidrIp: 24.4.216.39/32
+#        IpProtocol: tcp
+#        FromPort: 9160
+#        ToPort: 9160
+      # Westminster DC
+#      - CidrIp: 208.186.79.94/32
+#        IpProtocol: tcp
+#        FromPort: 9160
+#        ToPort: 9160
+      # Denver DC
+#      - CidrIp: 204.12.89.94/32
+#        IpProtocol: tcp
+#        FromPort: 9160
+#        ToPort: 9160
+      Tags:
+      - Key: Name
+        Value: cassandra-sg-external
+      VpcId:
+        Ref: VpcId
+  CassandraSecurityGroupExternalIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: '0'
+      GroupId:
+        Ref: CassandraSecurityGroup
+      IpProtocol: "-1"
+      SourceSecurityGroupId:
+        Ref: CassandraSecurityGroupExternal
+      ToPort: '65535'
+  CassandraSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cassandra Security Group
+      SecurityGroupEgress: []
+      SecurityGroupIngress:
+      - CidrIp: 10.0.0.0/8
+        IpProtocol: tcp
+        FromPort: 7000
+        ToPort: 7001
+      - CidrIp: 10.0.0.0/8
+        IpProtocol: tcp
+        FromPort: 7199 # JMX port
+        ToPort: 7199
+      - CidrIp: 10.0.0.0/8
+        IpProtocol: tcp
+        FromPort: 9042
+        ToPort: 9042
+      - CidrIp: 10.0.0.0/8
+        IpProtocol: tcp
+        FromPort: 9160
+        ToPort: 9160
+      - CidrIp: 10.0.0.0/8
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+      - CidrIp: 192.168.0.0/16
+        IpProtocol: tcp
+        FromPort: 7000
+        ToPort: 7001
+      - CidrIp: 192.168.0.0/16
+        IpProtocol: tcp
+        FromPort: 7199 # JMX port
+        ToPort: 7199
+      - CidrIp: 192.168.0.0/16
+        IpProtocol: tcp
+        FromPort: 9042
+        ToPort: 9042
+      - CidrIp: 192.168.0.0/16
+        IpProtocol: tcp
+        FromPort: 9160
+        ToPort: 9160
+      - CidrIp: 192.168.0.0/16
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+      Tags:
+      - Key: Name
+        Value: cassandra-sg
+      VpcId:
+        Ref: VpcId
+  CassandraSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: '0'
+      GroupId:
+        Ref: CassandraSecurityGroup
+      IpProtocol: "-1"
+      SourceSecurityGroupId:
+        Ref: CassandraSecurityGroup
+      ToPort: '65535'
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      Listeners:
+        - LoadBalancerPort: 7000
+          InstancePort: 7000
+          Protocol: TCP
+        - LoadBalancerPort: 7001
+          InstancePort: 7001
+          Protocol: TCP
+        - LoadBalancerPort: 9042
+          InstancePort: 9042
+          Protocol: TCP
+        - LoadBalancerPort: 9160
+          InstancePort: 9160
+          Protocol: TCP
+      Scheme: internal
+      SecurityGroups:
+        - Ref: SecurityGroup
+        - Ref: CassandraSecurityGroup
+      Subnets:
+        Ref: SubnetIds
+      Tags:
+      - Key: Name
+        Value:
+          Ref: AWS::StackName
+      - Key: linux
+        Value: ubuntu
+      - Key: role
+        Value: cassandra
+      - Key: environs
+        Value:
+          Ref: Environs
+      - Key: region
+        Value:
+          Ref: Region
+      - Key: spoke
+        Value:
+          Ref: Spoke
+      - Key: service
+        Value:
+          Ref: Service
+      - Key: scheme
+        Value: internal
+  LoadBalancerExternal:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      Listeners:
+        - LoadBalancerPort: 7000
+          InstancePort: 7000
+          Protocol: TCP
+        - LoadBalancerPort: 9042
+          InstancePort: 9042
+          Protocol: TCP
+        - LoadBalancerPort: 9160
+          InstancePort: 9160
+          Protocol: TCP
+      Scheme: internet-facing
+      SecurityGroups:
+        - Ref: CassandraSecurityGroupExternal
+      Subnets:
+        Ref: SubnetIds
+      Tags:
+      - Key: Name
+        Value:
+          Ref: AWS::StackName
+      - Key: linux
+        Value: ubuntu
+      - Key: role
+        Value: cassandra
+      - Key: environs
+        Value:
+          Ref: Environs
+      - Key: region
+        Value:
+          Ref: Region
+      - Key: spoke
+        Value:
+          Ref: Spoke
+      - Key: service
+        Value:
+          Ref: Service
+      - Key: scheme
+        Value: internet-facing
+#  RecordSet:
+#    Type: AWS::Route53::RecordSet
+#    Properties:
+#      HostedZoneId:
+#        Ref: PrivateDnsZoneId
+#      Name:
+#        Fn::Join:
+#        - ''
+#        - - Ref: Region
+#          - '-'
+#          - Ref: Environs
+#          - '-'
+#          - Ref: Spoke
+#          - '-'
+#          - cassandra
+#          - '-'
+#          - Ref: Service
+#          - "."
+#          - Ref: PrivateDnsName
+#      ResourceRecords:
+#        - Fn::GetAtt:
+#          - LoadBalancer
+#          - DNSName
+#      TTL: 300
+#      Type: CNAME
+Outputs:
+  RecordSetName:
+    Value:
+      Fn::Join:
+        - ''
+        - - Ref: Region
+          - '-'
+          - Ref: Environs
+          - '-'
+          - Ref: Spoke
+          - '-'
+          - cassandra
+          - '-'
+          - Ref: Service
+          - "."
+          - Ref: PrivateDnsName
+  RecordSetCanonicalRecord:
+    Value:
+      Fn::GetAtt:
+        - LoadBalancer
+        - DNSName
+  RecordSetNameExternal:
+    Value:
+      Fn::Join:
+        - ''
+        - - Ref: Region
+          - '-'
+          - Ref: Environs
+          - '-'
+          - Ref: Spoke
+          - '-'
+          - cassandra-ext
+          - '-'
+          - Ref: Service
+          - "."
+          - Ref: PrivateDnsName
+  RecordSetCanonicalRecordExternal:
+    Value:
+      Fn::GetAtt:
+        - LoadBalancerExternal
+        - DNSName
