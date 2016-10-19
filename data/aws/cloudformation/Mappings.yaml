@@ -1,0 +1,107 @@
+---
+Mappings:
+  AvailabilityZoneMap:
+    us-east-1: # Virginia
+      FirstAvailabilityZone: us-east-1c
+      SecondAvailabilityZone: us-east-1d
+      ThirdAvailabilityZone: us-east-1e
+      FourthAvailabilityZone: us-east-1b
+    us-east-2: # Ohio
+      FirstAvailabilityZone: us-east-2a
+      SecondAvailabilityZone: us-east-2b
+      ThirdAvailabilityZone: us-east-2c
+    us-west-1: # California
+      FirstAvailabilityZone: us-west-1a
+      SecondAvailabilityZone: us-west-1b
+      ThirdAvailabilityZone: us-west-1c
+    us-west-2:  # Oregon
+      FirstAvailabilityZone: us-west-2a
+      SecondAvailabilityZone: us-west-2b
+      ThirdAvailabilityZone: us-west-2c
+    eu-west-1: # Ireland
+      FirstAvailabilityZone: eu-west-1a
+      SecondAvailabilityZone: eu-west-1b
+      ThirdAvailabilityZone: eu-west-1c
+    eu-central-1: # Frankfurt
+      FirstAvailabilityZone: eu-central-1a
+      SecondAvailabilityZone: eu-central-1b
+    ap-northeast-1: # Tokyo
+      FirstAvailabilityZone: ap-northeast-1a
+      SecondAvailabilityZone: ap-northeast-1b
+      ThirdAvailabilityZone: ap-northeast-1c
+    ap-northeast-2: # Seoul
+      FirstAvailabilityZone: ap-northeast-2a
+      SecondAvailabilityZone: ap-northeast-2c
+    ap-southeast-1: # Singapore
+      FirstAvailabilityZone: ap-southeast-1a
+      SecondAvailabilityZone: ap-southeast-1b
+    ap-southeast-2: # Sydney
+      FirstAvailabilityZone: ap-southeast-2a
+      SecondAvailabilityZone: ap-southeast-2b
+      ThirdAvailabilityZone: ap-southeast-2c
+    ap-south-1: # Mumbai
+      FirstAvailabilityZone: ap-south-1a
+      SecondAvailabilityZone: ap-south-2b
+    sa-east-1:  # São Paulo
+      FirstAvailabilityZone: sa-east-1a
+      SecondAvailabilityZone: sa-east-1b
+      ThirdAvailabilityZone: sa-east-1c
+  EbsOptimizedMap:
+    t2.nano:
+      Optimized: False
+    t2.micro:
+      Optimized: False
+    t2.small:
+      Optimized: False
+    t2.medium:
+      Optimized: False
+    t2.large:
+      Optimized: False
+    m4.large:
+      Optimized: True
+    m4.xlarge:
+      Optimized: True
+    m4.2xlarge:
+      Optimized: True
+    m4.4xlarge:
+      Optimized: True
+    m4.10xlarge:
+      Optimized: True
+    c4.large:
+      Optimized: True
+    c4.xlarge:
+      Optimized: True
+    c4.2xlarge:
+      Optimized: True
+    c4.4xlarge:
+      Optimized: True
+    c4.8xlarge:
+      Optimized: True
+    m3.large:
+      Optimized: True
+    m3.medium:
+      Optimized: False
+    m3.large:
+      Optimized: False
+    m3.xlarge:
+      Optimized: True
+    m3.2xlarge:
+      Optimized: True
+    r3.large:
+      Optimized: False
+    r3.xlarge:
+      Optimized: True
+    r3.2xlarge:
+      Optimized: True
+    r3.4xlarge:
+      Optimized: True
+    r3.8xlarge:
+      Optimized: False
+    d2.xlarge:
+      Optimized: True
+    d2.2xlarge:
+      Optimized: True
+    d2.4xlarge:
+      Optimized: True
+    d2.8xlarge:
+      Optimized: True
