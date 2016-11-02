@@ -1,4 +1,0 @@
-Parameters:
-  AvailabilityZones:
-    Description: Availability Zones for VPC
-    Type: CommaDelimitedList

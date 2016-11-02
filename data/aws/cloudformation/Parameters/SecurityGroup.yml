@@ -1,4 +1,0 @@
-Parameters:
-  SecurityGroup:
-    Description: VPC Security Group
-    Type: AWS::EC2::SecurityGroup::Id

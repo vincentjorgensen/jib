@@ -1,5 +1,0 @@
-Parameters:
-  VolumeSize:
-    Default: 30
-    Description: Volume size for each instance
-    Type: Number

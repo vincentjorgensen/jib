@@ -1,4 +1,0 @@
-Parameters:
-  SubnetId:
-    Description: EC2 Subnet Id
-    Type: AWS::EC2::Subnet::Id

@@ -1,8 +1,0 @@
-Parameters:
-  Spoke:
-    Default: core
-    Description: Core or Edge
-    Type: String
-    AllowedValues:
-    - core
-    - edge

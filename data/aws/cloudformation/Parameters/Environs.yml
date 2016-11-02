@@ -1,8 +1,0 @@
-Parameters:
-  Environs:
-    Default: dev
-    Description: Prod or Dev (non-production)
-    Type: String
-    AllowedValues:
-    - prod
-    - dev

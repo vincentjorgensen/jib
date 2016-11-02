@@ -1,5 +1,0 @@
-Parameters:
-  ClusterSize:
-    Default: 3
-    Description: How many nodes in the cluster
-    Type: Number

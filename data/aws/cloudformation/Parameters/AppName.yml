@@ -1,6 +1,0 @@
-Parameters:
-  AppName:
-    AllowedPattern: '\w+'
-    Default: default
-    Description: Application Name
-    Type: String
