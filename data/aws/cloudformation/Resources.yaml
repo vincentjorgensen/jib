@@ -1,0 +1,185 @@
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        Ref: ImageId
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroupIds:
+      - Ref: SecurityGroup
+      - Ref: GlobalSecurityGroup
+      SourceDestCheck: 'False'
+      SubnetId:
+        Ref: SubnetId
+      Tags:
+      - Key: Name
+        Value:
+          Ref: AWS::StackName
+      - Key: OS
+        Value:
+          Ref: OS
+      - Key: OSDistro
+        Value:
+          Ref: OSDistro
+      - Key: OSRelease
+        Value:
+          Ref: OSRelease
+      - Key: Role
+        Value:
+          Ref: Role
+      - Key: Environs
+        Value:
+          Ref: Environs
+      - Key: Region
+        Value:
+          Ref: Region
+      - Key: Spoke
+        Value:
+          Ref: Spoke
+      - Key: Service
+        Value:
+          Ref: Service
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - |
+              #!/bin/bash -ex
+            - |
+              # Process CloudFormation init definitions
+            - |
+              apt-get update
+            - |
+              apt-get -y install python-setuptools python-pip python
+            - |
+              mkdir aws-cfn-bootstrap-latest 
+            - |
+              curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1
+            - |
+              easy_install aws-cfn-bootstrap-latest
+            - 'cfn-init -s '
+            - Ref: AWS::StackName
+            - ' -v '
+            - " -r Instance "
+            - "    --region "
+            - Ref: AWS::Region
+            - |
+
+              # End
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: false
+      BlockDeviceMappings:
+      - DeviceName: /dev/sda1 # /dev/xvda1
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize:
+            Ref: VolumeSize
+          VolumeType: gp2 # General Purpose (SSD)
+      - DeviceName: /dev/sdb # /dev/xvdb
+        VirtualName: ephemeral0
+      - DeviceName: /dev/sdc
+        VirtualName: ephemeral1
+      - DeviceName: /dev/sdd
+        VirtualName: ephemeral2
+      - DeviceName: /dev/sde
+        VirtualName: ephemeral3
+      EbsOptimized:
+        Fn::FindInMap:
+          - EbsOptimizedMap
+          - Ref: InstanceType
+          - Optimized
+      ImageId:
+        Ref: ImageId
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroups:
+      - Ref: SecurityGroup
+      - Ref: GlobalSecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - |
+              #!/bin/bash -ex
+            - |
+              # Process CloudFormation init definitions
+            - |
+              apt-get update
+            - |
+              apt-get -y install python-setuptools python-pip python
+            - |
+              mkdir aws-cfn-bootstrap-latest 
+            - |
+              curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1
+            - |
+              easy_install aws-cfn-bootstrap-latest
+            - 'cfn-init -s '
+            - Ref: AWS::StackName
+            - ' -v '
+            - " -r LaunchConfig "
+            - "    --region "
+            - Ref: AWS::Region
+            - |
+
+              # End
+  ServerGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones:
+        Ref: AvailabilityZones
+      DesiredCapacity:
+        Ref: ClusterSize
+      LaunchConfigurationName:
+        Ref: LaunchConfig
+      LoadBalancerNames:
+        - Ref: LoadBalancer
+      MaxSize:
+        Ref: ClusterSize
+      MinSize:
+        Ref: ClusterSize
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: AWS::StackName
+      - Key: OS
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: OS
+      - Key: OSDistro
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: OSDistro
+      - Key: OSRelease
+        PropagateAtLaunch: 'true'
+        Value: 
+          Ref: OSRelease
+      - Key: Role
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Role
+      - Key: Environs
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Environs
+      - Key: Region
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Region
+      - Key: Spoke
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Spoke
+      - Key: Service
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Service
+      VPCZoneIdentifier:
+        Ref: SubnetIds
