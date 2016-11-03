@@ -1,5 +1,5 @@
 ---
-Parameters
+Parameters:
   AppName:
     AllowedPattern: '\w+'
     Default: default
@@ -59,6 +59,21 @@ Parameters
   KeyName:
     Description: Existing EC2 KeyPair for SSH
     Type: AWS::EC2::KeyPair::KeyName
+  OS:
+    AllowedPattern: 'linux'
+    Default: linux
+    Description: Operating System
+    Type: String
+  OSDistro:
+    AllowedPattern: '(ubuntu|redhat|centos)'
+    Default: ubuntu
+    Description: Operating System Distro
+    Type: String
+  OSRelease:
+    AllowedPattern: '(trusty|xenial)'
+    Default: xenial
+    Description: Operating System Distro Release
+    Type: String
   PrivateDnsName:
     AllowedPattern: '[\w.]+'
     Description: Private-facing DNS Zone
@@ -83,6 +98,9 @@ Parameters
     - ap-northeast-1
     - ap-northeast-2
     - sa-east-1
+  GlobalSecurityGroup:
+    Description: VPC Security Group
+    Type: AWS::EC2::SecurityGroup::Id
   SecurityGroup:
     Description: VPC Security Group
     Type: AWS::EC2::SecurityGroup::Id

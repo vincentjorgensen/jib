@@ -312,7 +312,7 @@ Resources:
       - Key: Name
         Value:
           Ref: AWS::StackName
-      - Key: linux
+      - Key: Linux
         Value: ubuntu
       - Key: role
         Value: cassandra
