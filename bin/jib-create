@@ -21,10 +21,10 @@ def add_stack_item ( directive, value ):
     global cf_stack
 
     if directive in directives.keys():
-        my_directive = directives[directive]
+        my_definition = directives[directive]
         # Parameters
-        if 'Parameters' in my_directive.keys():
-            for parameter in my_directive['Parameters']:
+        if 'Parameters' in my_definition.keys():
+            for parameter in my_definition['Parameters']:
                 # When the parameter is in the master file
                 if parameter in parameters.keys():
                     # When it's not already in the stack
@@ -32,8 +32,8 @@ def add_stack_item ( directive, value ):
                         # Copy it from the master file
                         cf_stack['Parameters'][parameter] = copy.copy(parameters[parameter])
         # Mappings
-        if 'Mappings' in my_directive.keys():
-            for mapping in my_directive['Mappings']:
+        if 'Mappings' in my_definition.keys():
+            for mapping in my_definition['Mappings']:
                 # When the mapping is in the master file
                 if mapping in mappings.keys():
                     # When it's not already in the stack
@@ -41,8 +41,8 @@ def add_stack_item ( directive, value ):
                         # Copy it from the master file
                         cf_stack['Mappings'][mapping] = copy.copy(mappings[mapping])
         # Outputs
-        if 'Outputs' in my_directive.keys():
-            for output in my_directive['Outputs']:
+        if 'Outputs' in my_definition.keys():
+            for output in my_definition['Outputs']:
                 # When the output is in the master file
                 if output in outputs.keys():
                     # When it's not already in the stack
@@ -50,9 +50,9 @@ def add_stack_item ( directive, value ):
                         # Copy it from the master file
                         cf_stack['Outputs'][output] = copy.copy(outputs[output])
         # Resources
-        if 'Resources' in my_directive.keys():
-            for resource in my_directive['Resources']:
-                # When the resource is in the master file
+        if 'Resources' in my_definition.keys():
+            for resource in my_definition['Resources']:
+                # When the resource is in the master Resource Definition file
                 if resource in resources.keys():
                     # When it's not already in the stack
                     if resource not in cf_stack['Resources'].keys():
@@ -62,6 +62,12 @@ def add_stack_item ( directive, value ):
                         cf_stack['Outputs'][resource] = {}
                         cf_stack['Outputs'][resource]['Value'] = {}
                         cf_stack['Outputs'][resource]['Value']['Ref'] = str(resource)
+                # If it's not in the Master Resource Definition File, then it's a special snowflake
+                else:
+                  if resource = "Ports":
+                      # Do something
+                  elif resource = "LBPorts":
+                      # Do something
         # Directive defaults
         if 'Defaults' in value.keys():
             # Set the Resource Parameter Defaults
@@ -74,18 +80,17 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 data_path = os.environ['DATA_DIR']
 
 parameters = load_yaml_dict(data_path+"/aws/cloudformation/Parameters.yaml")['Parameters']
-outputs = load_yaml_dict(data_path+"/aws/cloudformation/Outputs.yaml")['Outputs']
-mappings = load_yaml_dict(data_path+"/aws/cloudformation/Mappings.yaml")['Mappings']
-resources = load_yaml_dict(data_path+"/aws/cloudformation/Resources.yaml")['Resources']
+outputs    = load_yaml_dict(data_path+"/aws/cloudformation/Outputs.yaml")['Outputs']
+mappings   = load_yaml_dict(data_path+"/aws/cloudformation/Mappings.yaml")['Mappings']
+resources  = load_yaml_dict(data_path+"/aws/cloudformation/Resources.yaml")['Resources']
 directives = load_yaml_dict(data_path+"/aws/cloudformation/Directives.yaml")['Directives']
-
 
 if len(sys.argv) < 2:
     sys.exit("Provide a stack name as an argument")
 else:
     app_name=sys.argv[1]
 
-manifest = load_yaml_dict(os.environ['MANIFESTS_DIR']+'/'+app_name+'.yaml')['Manifest']
+manifest   = load_yaml_dict(os.environ['MANIFESTS_DIR']+'/'+app_name+'.yaml')['Manifest']
 
 # Init CF Stack Definitions
 cf_stack = {}
