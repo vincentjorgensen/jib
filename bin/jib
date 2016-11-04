@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+readonly BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly BASE_DIR=$BIN_DIR/..				# jib root directory
+readonly ANSIBLE_DIR=$BASE_DIR/ansible		# Ansible
+readonly DATA_DIR=$BASE_DIR/data			# source data
+readonly STACKS_DIR=$BASE_DIR/stacks		# CloudFormation Stack Repository (generated)
+readonly MANIFESTS_DIR=$BASE_DIR/manifests	# Stack definitions
+export BIN_DIR BASE_DIR ANSIBLE_DIR DATA_DIR STACKS_DIR MANIFESTS_DIR
+
+function usage {
+    cat <<EOF
+NAME
+     jib -- Ansible/AWS Framework
+
+SYNOPSIS
+     jib [-abcdefghijklnmnoqrztuvwxzyz] <action> <stack_name|ansible_hosts>
+
+DESCRIPTION
+     Without arguments, 
+
+     -c    Create a CloudFormation Stack. Overrides JIB_MODE
+
+     -d    Delete a CloudFormation Stack. Overrides JIB_MODE
+
+     -e environs
+           Set locale to _environs_ (_dev_ or _prod_). Overrides JIB_ENVIRONS
+
+     -h    Prints this help message
+
+     -u    Update a CloudFormation Stack
+
+     The -u and -d options cannot be set at the same time.
+EOF
+
+}
+environs=${JIB_ENVIRONS:=dev}
+mode=${JIB_MODE:=none}
+
+while getopts ":abcde:fghijklmnopqrstuvwxyz" opt; do
+    case $opt in
+        c)
+            mode=create
+			;;
+        d)
+            mode=delete
+			;;
+        e)
+            environs=$OPTARG
+            ;;
+        h)
+            usage
+            exit
+			;;
+        u)
+            mode=update
+			;;
+
+    esac
+done
+shift $((OPTIND-1))
+
+export ENVIRONS=$environs
+
+if [[ $mode != none ]]; then
+    exec $BIN_DIR/jib-$mode $@
+fi
+
+# End
