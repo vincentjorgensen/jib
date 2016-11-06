@@ -36,14 +36,16 @@ EOF
 }
 environs=${JIB_ENVIRONS:=dev}
 mode=${JIB_MODE:=none}
-
+debug=false
 while getopts ":abcde:fghijklmnopqrstuvwxyz" opt; do
     case $opt in
         c)
             mode=create
+            break
 			;;
         d)
             mode=delete
+            break
 			;;
         e)
             environs=$OPTARG
@@ -54,8 +56,11 @@ while getopts ":abcde:fghijklmnopqrstuvwxyz" opt; do
 			;;
         u)
             mode=update
+            break
 			;;
-
+        v)
+            debug=true
+            ;;
     esac
 done
 shift $((OPTIND-1))
@@ -63,6 +68,7 @@ shift $((OPTIND-1))
 export ENVIRONS=$environs
 
 if [[ $mode != none ]]; then
+    $debug && echo DEBUG: $BIN_DIR/jib-$mode $@
     exec $BIN_DIR/jib-$mode $@
 fi
 

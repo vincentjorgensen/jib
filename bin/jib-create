@@ -1,10 +1,18 @@
 #!/usr/bin/env python
+###############################################################################
 # Create a CloudFormation Stack
+###############################################################################
+from __future__ import print_function
 import os
 import sys
 import yaml
 import copy
 import argparse
+import logging
+
+module = sys.modules['__main__'].__file__
+log = logging.getLogger(module)
+#log = logging.getLogger(__name__)
 
 # Function to convert a yaml file to a python dict
 def load_yaml_dict ( file ):
@@ -12,75 +20,7 @@ def load_yaml_dict ( file ):
         data = yaml.load(f)
     return data
 
-# Adds directive to cf_stack as defined by dict
-def add_stack_item ( directive, value ):
-    global parameters
-    global outputs
-    global mappings
-    global resources
-    global directives
-    global cf_stack
-
-    if directive in directives.keys():
-        my_definition = directives[directive]
-        # Parameters
-        if 'Parameters' in my_definition.keys():
-            for parameter in my_definition['Parameters']:
-                # When the parameter is in the master file
-                if parameter in parameters.keys():
-                    # When it's not already in the stack
-                    if parameter not in cf_stack['Parameters'].keys():
-                        # Copy it from the master file
-                        cf_stack['Parameters'][parameter] = copy.copy(parameters[parameter])
-        # Mappings
-        if 'Mappings' in my_definition.keys():
-            for mapping in my_definition['Mappings']:
-                # When the mapping is in the master file
-                if mapping in mappings.keys():
-                    # When it's not already in the stack
-                    if mapping not in cf_stack['Mappings'].keys():
-                        # Copy it from the master file
-                        cf_stack['Mappings'][mapping] = copy.copy(mappings[mapping])
-        # Outputs
-        if 'Outputs' in my_definition.keys():
-            for output in my_definition['Outputs']:
-                # When the output is in the master file
-                if output in outputs.keys():
-                    # When it's not already in the stack
-                    if output not in cf_stack['Outputs'].keys():
-                        # Copy it from the master file
-                        cf_stack['Outputs'][output] = copy.copy(outputs[output])
-        # Resources
-        if 'Resources' in my_definition.keys():
-            for resource in my_definition['Resources']:
-                # When the resource is in the master Resource Definition file
-                if resource in resources.keys():
-                    # When it's not already in the stack
-                    if resource not in cf_stack['Resources'].keys():
-                        # Copy it from the master file
-                        cf_stack['Resources'][resource] = copy.copy(resources[resource])
-                        #  Create an 'Output' for each resource
-                        cf_stack['Outputs'][resource] = {}
-                        cf_stack['Outputs'][resource]['Value'] = {}
-                        cf_stack['Outputs'][resource]['Value']['Ref'] = str(resource)
-                # If it's not in the Master Resource Definition File, then it's a special snowflake
-                else:
-                  if resource == "Ports":
-                      # Do something
-                      print "Ports is true"
-                  elif resource == "LBPorts":
-                      # Do something
-                      print "LBPorts is true"
-        # Directive defaults
-        if 'Defaults' in value.keys():
-            # Set the Resource Parameter Defaults
-            for parameter in value['Defaults']:
-                if parameter in cf_stack['Parameters']:
-                    cf_stack['Parameters'][parameter]['Default'] = value['Defaults'][parameter]
-
-# Main
 dir_path = os.path.dirname(os.path.realpath(__file__))
-#data_path = os.environ['DATA_DIR']
 data_path = dir_path + "/../data"
 manifests_path = dir_path + "/../manifests"
 stacks_dir = dir_path + "/../stacks"
@@ -91,45 +31,147 @@ mappings   = load_yaml_dict(data_path+"/aws/cloudformation/Mappings.yaml")['Mapp
 resources  = load_yaml_dict(data_path+"/aws/cloudformation/Resources.yaml")['Resources']
 directives = load_yaml_dict(data_path+"/aws/cloudformation/Directives.yaml")['Directives']
 
-parser = argparse.ArgumentParser()
-parser.add_argument("app_name", type=str, help="Name of the app e.g. cassandra, consul, etc.")
-parser.add_argument('-r','--region', type=str, default="us-west-2", help="AWS region")
-parser.add_argument('-e','--environs', type=str, default="dev", help="Localization e.g. dev or prod")
-parser.add_argument('-s','--service_name', type=str, help="Optional Service Name e.g. audience")
-parser.add_argument('-w','--spoke', type=str, default="core", help="Spoke (as on a wheel) either edge or core")
-args = parser.parse_args()
+# Adds directive to cf_stack as defined by dict
+def add_stack_item ( directive, value, cf_stack ):
+    global parameters
+    global outputs
+    global mappings
+    global resources
+    global directives
 
-try:
-    stack_name = args.region + '-' + args.environs + '-' + args.spoke + '-' + args.app_name
-except NameError:
-    parser.print_help()
-    exit
+    log.debug ("Directive is " + directive)
+    if directive in directives.keys():
+        my_definition = directives[directive]
+        # Parameters
+        if 'Parameters' in my_definition.keys():
+            for parameter in my_definition['Parameters']:
+                # When the parameter is in the master file
+                log.debug ("  Parameter is " + parameter)
+                if parameter in parameters.keys():
+                    # When it's not already in the stack
+                    if parameter not in cf_stack['Parameters'].keys():
+                        # Copy it from the master file
+                        cf_stack['Parameters'][parameter] = copy.copy(parameters[parameter])
+        # Mappings
+        if 'Mappings' in my_definition.keys():
+            for mapping in my_definition['Mappings']:
+                # When the mapping is in the master file
+                log.debug ("  Mapping is " + mapping)
+                if mapping in mappings.keys():
+                    # When it's not already in the stack
+                    if mapping not in cf_stack['Mappings'].keys():
+                        # Copy it from the master file
+                        cf_stack['Mappings'][mapping] = copy.copy(mappings[mapping])
+        # Outputs
+        if 'Outputs' in my_definition.keys():
+            for output in my_definition['Outputs']:
+                # When the output is in the master file
+                log.debug ("  Output is " + output)
+                if output in outputs.keys():
+                    # When it's not already in the stack
+                    if output not in cf_stack['Outputs'].keys():
+                        # Copy it from the master file
+                        cf_stack['Outputs'][output] = copy.copy(outputs[output])
+        # Resources
+        if 'Resources' in my_definition.keys():
+            for resource in my_definition['Resources']:
+                # When the resource is in the master Resource Definition file
+                log.debug ("  Resource is " + resource)
+                if resource in resources.keys():
+                    # When it's not already in the stack
+                    if resource not in cf_stack['Resources'].keys():
+                        # Copy it from the master file
+                        cf_stack['Resources'][resource] = copy.copy(resources[resource])
+                        #  Create an 'Output' for each resource
+                        cf_stack['Outputs'][resource] = {}
+                        cf_stack['Outputs'][resource]['Value'] = {}
+                        cf_stack['Outputs'][resource]['Value']['Ref'] = str(resource)
+    # If it's not in the Master Resource Definition File, then it's a special snowflake
+    else:
+        if directive == "Ports":
+            # Do something
+            log.debug ("Ports is true")
+        elif directive == "LBPorts":
+            # Do something
+            log.debug ("LBPorts is true")
+    # Directive defaults
+    # Defaults
+    if 'Defaults' in value.keys():
+        # Set the Resource Parameter Defaults
+        for parameter in value['Defaults']:
+            log.debug ("  Default is " + parameter)
+            if parameter in cf_stack['Parameters']:
+                cf_stack['Parameters'][parameter]['Default'] = value['Defaults'][parameter]
 
-if args.service_name is not None:
-    stack_name += '-' + args.service_name
+def parse_command_line(argv):
+    formatter_class = argparse.RawDescriptionHelpFormatter
+    parser = argparse.ArgumentParser( description=module, formatter_class=formatter_class) 
+    parser.add_argument("app_name", type=str, help="Name of the app e.g. cassandra, consul, etc.")
+    parser.add_argument('-r','--region', type=str, default="us-west-2", help="AWS region")
+    parser.add_argument('-e','--environs', type=str, default="dev", help="Localization e.g. dev or prod")
+    parser.add_argument('-s','--service_name', type=str, help="Optional Service Name e.g. audience")
+    parser.add_argument('-w','--spoke', type=str, default="core", help="Spoke (as on a wheel) either edge or core")
+    parser.add_argument('-v','--verbose', dest="verbose_count", action="count", default=1, help="Increases log verbosity for each occurence")
+    arguments = parser.parse_args(argv[1:])
+    log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
+    return arguments
 
-manifest   = load_yaml_dict(manifests_path+'/'+args.app_name+'.yaml')['Manifest']
 
-# Init CF Stack Definitions
-cf_stack = {}
-cf_stack['AWSTemplateFormatVersion'] = '2010-09-09'
-cf_stack['Description'] = stack_name.upper() + " AUTOGENERATED. DO NOT EDIT" 
-cf_stack['Parameters'] = {}
-cf_stack['Outputs'] = {}
-cf_stack['Mappings'] = {}
-cf_stack['Resources'] = {}
+def convert_manifest_to_cftemplate(args ):
+    app_name=args.app_name
+    environs = args.environs
+    region = args.region
+    spoke = args.spoke
+    service_name = args.service_name
 
-# Read in the Manifest File
-
-# Parse through the Manifest and put together a valid Resource tree
-for directive, value in manifest.iteritems():
-    add_stack_item( directive, value )
+    try:
+        stack_name = region + '-' + environs + '-' + spoke + '-' + app_name
+    except NameError:
+        parser.print_help()
+        exit
     
-# For each Resource, create an Output
+    if service_name is not None:
+        stack_name += '-' + service_name
+    
+    manifest   = load_yaml_dict(manifests_path+'/'+app_name+'.yaml')['Manifest']
+    
+    # Init CF Stack Definitions
+    cf_stack = {}
+    cf_stack['AWSTemplateFormatVersion'] = '2010-09-09'
+    cf_stack['Description'] = stack_name.upper() + " AUTOGENERATED. DO NOT EDIT" 
+    cf_stack['Parameters'] = {}
+    cf_stack['Outputs'] = {}
+    cf_stack['Mappings'] = {}
+    cf_stack['Resources'] = {}
+    
+    # Read in the Manifest File
+    
+    # Parse through the Manifest and put together a valid Resource tree
+    for directive, value in manifest.iteritems():
+        add_stack_item( directive, value, cf_stack )
+        
+    # For each Resource, create an Output
+    
+    # Write out the CF File
+    stack_path=stacks_dir+'/'+stack_name+'.cftemplate'
+    with open(stack_path,'wb') as f:
+        f.write("---\n")
+        yaml.dump(cf_stack, f, default_flow_style=False)
+        log.info ("" + stack_path + " created")
 
-# Write out the CF File
-stack_path=stacks_dir+'/'+stack_name+'.cftemplate'
-with open(stack_path,'wb') as f:
-    f.write("---\n")
-    yaml.dump(cf_stack, f, default_flow_style=False)
+# Main
+def main():
+    """Main program. Sets up logging and do some work."""
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG,
+        format='%(name)s (%(levelname)s): %(message)s')
+    try:
+        cmd_lin_args = parse_command_line(sys.argv)
+        convert_manifest_to_cftemplate(cmd_lin_args )
+    except KeyboardInterrupt:
+        log.error('Program interrupted!')
+    finally:
+        logging.shutdown()
+
+if __name__ == "__main__":
+    sys.exit(main())
 # End
