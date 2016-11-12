@@ -10,42 +10,57 @@ Mappings:
       FirstAvailabilityZone: us-east-2a
       SecondAvailabilityZone: us-east-2b
       ThirdAvailabilityZone: us-east-2c
+      FourthAvailabilityZone: us-east-2a
     us-west-1: # California
       FirstAvailabilityZone: us-west-1a
       SecondAvailabilityZone: us-west-1b
       ThirdAvailabilityZone: us-west-1c
+      FourthAvailabilityZone: us-west-1a
     us-west-2:  # Oregon
       FirstAvailabilityZone: us-west-2a
       SecondAvailabilityZone: us-west-2b
       ThirdAvailabilityZone: us-west-2c
+      FourthAvailabilityZone: us-west-2a
     eu-west-1: # Ireland
       FirstAvailabilityZone: eu-west-1a
       SecondAvailabilityZone: eu-west-1b
       ThirdAvailabilityZone: eu-west-1c
+      FourthAvailabilityZone: eu-west-1a
     eu-central-1: # Frankfurt
       FirstAvailabilityZone: eu-central-1a
       SecondAvailabilityZone: eu-central-1b
+      ThirdAvailabilityZone: eu-central-1a
+      FourthAvailabilityZone: eu-central-1b
     ap-northeast-1: # Tokyo
       FirstAvailabilityZone: ap-northeast-1a
       SecondAvailabilityZone: ap-northeast-1b
       ThirdAvailabilityZone: ap-northeast-1c
+      FourthAvailabilityZone: ap-northeast-1a
     ap-northeast-2: # Seoul
       FirstAvailabilityZone: ap-northeast-2a
       SecondAvailabilityZone: ap-northeast-2c
+      ThirdAvailabilityZone: ap-northeast-2a
+      FourthAvailabilityZone: ap-northeast-2c
     ap-southeast-1: # Singapore
       FirstAvailabilityZone: ap-southeast-1a
       SecondAvailabilityZone: ap-southeast-1b
+      ThirdAvailabilityZone: ap-southeast-1a
+      FourthAvailabilityZone: ap-southeast-1b
     ap-southeast-2: # Sydney
       FirstAvailabilityZone: ap-southeast-2a
       SecondAvailabilityZone: ap-southeast-2b
       ThirdAvailabilityZone: ap-southeast-2c
+      FourthAvailabilityZone: ap-southeast-2a
     ap-south-1: # Mumbai
       FirstAvailabilityZone: ap-south-1a
       SecondAvailabilityZone: ap-south-2b
+      ThirdAvailabilityZone: ap-south-1a
+      FourthvailabilityZone: ap-south-2b
     sa-east-1:  # São Paulo
       FirstAvailabilityZone: sa-east-1a
       SecondAvailabilityZone: sa-east-1b
       ThirdAvailabilityZone: sa-east-1c
+      FourthvailabilityZone: sa-east-1a
   EbsOptimizedMap:
     t2.nano:
       Optimized: False
