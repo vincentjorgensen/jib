@@ -149,6 +149,10 @@ Resources:
         PropagateAtLaunch: 'true'
         Value:
           Ref: AWS::StackName
+      - Key: Environs
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Environs
       - Key: OS
         PropagateAtLaunch: 'true'
         Value:
@@ -183,3 +187,61 @@ Resources:
           Ref: Service
       VPCZoneIdentifier:
         Ref: SubnetIds
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Application Security Group
+      SecurityGroupEgress: []
+      SecurityGroupIngress: []
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: AWS::StackName
+      - Key: Region
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Region
+      - Key: Role
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Role
+      - Key: Spoke
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Spoke
+      - Key: Service
+        PropagateAtLaunch: 'true'
+        Value:
+          Ref: Service
+      VpcId:
+        Ref: VpcId
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      Listeners: []
+      Scheme: internal
+      SecurityGroups:
+        - Ref: SecurityGroup
+        - Ref: GlobalSecurityGroup
+      Subnets:
+        Ref: SubnetIds
+      Tags:
+      - Key: Name
+        Value:
+          Ref: AWS::StackName
+      - Key: Region
+        Value:
+          Ref: Region
+      - Key: Role
+        Value:
+          Ref: Role
+      - Key: Spoke
+        Value:
+          Ref: Spoke
+      - Key: Service
+        Value:
+          Ref: Service
+      - Key: Environs
+        Value:
+          Ref: Environs
