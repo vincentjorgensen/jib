@@ -86,14 +86,27 @@ def add_stack_item ( directive, value, cf_stack ):
                         cf_stack['Outputs'][resource] = {}
                         cf_stack['Outputs'][resource]['Value'] = {}
                         cf_stack['Outputs'][resource]['Value']['Ref'] = str(resource)
-    # If it's not in the Master Resource Definition File, then it's a special snowflake
-    else:
         if directive == "Ports":
-            # Do something
-            log.debug ("Ports is true")
+            if 'Open' in value.keys():
+                log.debug ("Open Ports are " + str(value['Open']))
+                for port in value['Open']:
+                    sgi = { 'CidrIp': '0.0.0.0/0',
+                            'IpProtocol': 'tcp',
+                            'FromPort': port,
+                            'ToPort': port
+                    }
+                    cf_stack['Resources']['SecurityGroup']['Properties']['SecurityGroupIngress'].append(sgi)
+
         elif directive == "LBPorts":
-            # Do something
-            log.debug ("LBPorts is true")
+            if 'Open' in value.keys():
+                log.debug ("Open Ports are " + str(value['Open'].keys()))
+                for port,proto in value['Open'].iteritems():
+                    listener = {
+                        'LoadBalancerPort': port,
+                        'InstancePort': port,
+                        'Protocol': proto
+                    }
+                    cf_stack['Resources']['LoadBalancer']['Properties']['Listeners'].append(listener)
     # Directive defaults
     # Defaults
     if 'Defaults' in value.keys():

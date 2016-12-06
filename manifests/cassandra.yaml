@@ -1,0 +1,32 @@
+---
+Manifest:
+  ASG:                          # This implies ServerGroup, LaunchConfig
+    Defaults:
+      ClusterSize: 6            # In ASG Context, implies Parameter default ClusterSize = 6
+      OS: linux
+      OSDistro: ubuntu
+      OSRelease: xenial
+      Role: cassandra
+      VolumeSize: 300           # In ASG Context, implies Parameter Default VolumeSize = 300
+  Ports: 
+    Open:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160                    # Internal Security Group
+  LBPorts:                      # This implies a LoadBalancer Internal-Facing 
+    Open:
+      7000:
+        Proto:  TCP             # TODO: What if LBPorts comes first? How does ASG get that config info?
+      7001:                     #       What if there is no LB? Will ASG properly ignore it?
+        Proto:  TCP             # TODO: What if LBPorts comes first? How does ASG get that config info?
+      9042:
+        Proto:  TCP             # TODO: What if LBPorts comes first? How does ASG get that config info?
+      9160:                     
+        Proto:  TCP             # TODO: What if LBPorts comes first? How does ASG get that config info?
+  Cassandra:                    # This is for Ansible config
+    Version: dsc30
+  Java:                         # This is for Ansible config
+    Vendor: oracle
+    JavaVersion: 8
