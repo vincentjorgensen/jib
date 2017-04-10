@@ -14,22 +14,38 @@ import com.amazonaws.auth.*
 import com.amazonaws.auth.profile.*
 import com.amazonaws.regions.*
 
-AWSCredentialsProvider credentials = new ProfileCredentialsProvider("indev")
+class AWSClient {
+    
+    AWSCredentialsProvider credentials
+    AmazonS3 s3Client
+    AmazonEC2 ec2Client
+    AmazonCloudFormation
 
-AmazonS3 s3Client = AmazonS3ClientBuilder.standard().
+    public AWSClient(String credentials, String region) {
+        AWSCredentialsProvider credentials = new ProfileCredentialsProvider(credentials)
+
+
+        AmazonS3 s3Client = AmazonS3ClientBuilder.standard().
                        withCredentials(credentials).
-                       withRegion(Regions.US_WEST_2).
+                       withRegion(region).
                        build()
 
-AmazonEC2 ec2Client = AmazonEC2ClientBuilder.standard().
+        AmazonEC2 ec2Client = AmazonEC2ClientBuilder.standard().
                        withCredentials(credentials).
-                       withRegion(Regions.US_WEST_2).
+                       withRegion(region).
                        build()
 
-AmazonCloudFormation CloudFormationClient = AmazonCloudFormationClientBuilder.standard().
+        AmazonCloudFormation CloudFormationClient = AmazonCloudFormationClientBuilder.standard().
                        withCredentials(credentials).
-                       withRegion(Regions.US_WEST_2).
+                       withRegion(region).
                        build()
+
+        this.credentials = credentials
+        this.s3Client = s3Client
+        this.ec2Client = ec2Client
+        this.CloudFormationClient = CloudFormationClient
+    }
+}
 
 class Stack {
     String name
